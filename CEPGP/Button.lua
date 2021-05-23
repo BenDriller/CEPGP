@@ -510,6 +510,29 @@ function CEPGP_ListButton_OnClick(obj, button)
 				end
 			end);
 			return;
+
+					elseif strfind(obj, "CEPGP_raid_decay_GP") then --Click the Decay Raid GP button in the Raid menu
+			CEPGP_decay_popup:Show();
+			CEPGP_decay_popup_reason:SetText("");
+			CEPGP_decay_popup_amount:SetText("0");
+			CEPGP_decay_popup_header:SetText("Decay Raid GP")
+			local GP; -- Whether or not this is an EP or GP specific decay
+			
+			CEPGP_decay_popup_desc:SetText("Positive numbers decay | Negative numbers inflate");
+			CEPGP_decay_popup_confirm:SetScript('OnClick', function()
+				local amount = CEPGP_decay_popup_amount:GetText();
+				local reason = CEPGP_decay_popup_reason:GetText();
+				if (string.find(amount, '^[0-9]+$') or string.find(amount, '^[0-9]+.[0-9]+$') or
+					string.find(amount, '^-[0-9]+$') or string.find(amount, '^-[0-9]+.[0-9]+$')) and
+					amount ~= "0" then
+					PlaySound(799);
+					CEPGP_decay_popup:Hide();
+					CEPGP_DecayRaidGP(tonumber(amount), reason, EP, GP, fixed);
+				else
+					CEPGP_print("Enter a valid number", true);
+				end
+			end);
+			return;
 		end
 	end
 end
