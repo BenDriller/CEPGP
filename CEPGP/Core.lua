@@ -1305,3 +1305,108 @@ function CEPGP_resetAll(msg)
 	end
 	
 end
+
+function CEPGP_DecayRaidGP(amount, msg)	
+	amount = math.floor(amount);	
+	local function callback()	
+		local success, failMsg = pcall(function()	
+			local total = GetNumGroupMembers();	
+			CEPGP_Info.IgnoreUpdates = true;	
+			CEPGP_SendAddonMsg("?IgnoreUpdates;true", "GUILD");	
+				
+			local roster = {};	
+				
+			for _, v in pairs(CEPGP_Info.Raid.Roster) do	
+				roster[v[1]] = "";	
+			end	
+				
+			local function update()	
+				if msg ~= "" and msg ~= nil then	
+					if tonumber(amount) <= 0 then	
+						CEPGP_addTraffic("Raid", UnitName("player"), "Increasing Raid GP -" .. amount .. " (" .. msg .. ")", "", "", "", "", "", time());	
+						CEPGP_sendChatMessage(amount .. "% GP increased (" .. msg .. ")", CEPGP.Channel);	
+					else	
+						CEPGP_addTraffic("Raid", UnitName("player"), "Decaying Raid GP +" .. amount .. " (" .. msg .. ")", "", "", "", "", "", time());	
+						CEPGP_sendChatMessage(amount .. "% GP decayed for all raid members (" .. msg .. ")", CEPGP.Channel);	
+					end	
+				else -- no message was written	
+					if tonumber(amount) <= 0 then	
+						amount = string.sub(amount, 2, string.len(amount));	
+						CEPGP_addTraffic("Raid", UnitName("player"), "Increasing Raid GP -" .. amount, "", "", "", "", "", time());	
+						CEPGP_sendChatMessage(amount .. "% GP increased for all raid members", CEPGP.Channel);	
+					else	
+						CEPGP_addTraffic("Raid", UnitName("player"), "Add Raid EP +" .. amount, "", "", "", "", "", time());	
+						CEPGP_sendChatMessage(amount .. "% GP decayed for all raid members", CEPGP.Channel);	
+					end	
+				end	
+				if _G["CEPGP_traffic"]:IsVisible() then	
+					CEPGP_UpdateTrafficScrollBar();	
+				end	
+				C_Timer.After(2, function()	
+					CEPGP_Info.IgnoreUpdates = false;	
+					CEPGP_SendAddonMsg("?IgnoreUpdates;false", "GUILD");	
+					CEPGP_rosterUpdate("GUILD_ROSTER_UPDATE");	
+				end);	
+			end	
+				
+			local i = 0;	
+			local mains = {};	
+			C_Timer.NewTicker(0.0001, function()	
+				i = i + 1;	
+				local name = GetRaidRosterInfo(i);	
+				local EP, GP;	
+				if CEPGP_Info.Guild.Roster[name] then	
+					local index = CEPGP_getIndex(name);	
+					local main = CEPGP_getMain(name);	
+						
+					if main then	
+						for v, _ in pairs(mains) do	
+							if v == main then	
+								return;	
+							end	
+						end	
+							
+						if not roster[main] then	
+							mains[main] = name;	
+						end	
+					else	
+						EP, GP = CEPGP_getEPGP(name, index);	
+						GP = math.max(math.floor((tonumber(GP-CEPGP.GP.Min)*(1-(amount/100)))+CEPGP.GP.Min), CEPGP.GP.Min);	
+						GuildRosterSetOfficerNote(index, EP .. "," .. GP);	
+						if CEPGP.Alt.Links[name] and not mains[name] then	
+							mains[name] = {};	
+						end	
+					end	
+				end	
+				if i == total then	
+					C_Timer.After(2, function()	
+						for main, alt in pairs(mains) do	
+							if #mains[main] == 0 then	
+								CEPGP_syncAltStandings(main);	
+							else	
+								CEPGP_addAltEPGP(amount, 0, alt, main);	
+							end	
+						end	
+					end);	
+					update();	
+				end	
+			end, total);	
+		end);	
+			
+		if not success then	
+			CEPGP_print("A problem was encountered while awarding EP to the raid", true);	
+			CEPGP_print(failMsg, true);	
+		end	
+	end	
+		
+	--[[if CEPGP_ntgetn(CEPGP_Info.Guild.Roster) < GetNumGuildMembers() and CEPGP_Info.Guild.Polling then	
+		CEPGP_print("Scanning guild roster. Raid EP will be applied soon.");	
+		if encounter then	
+			CEPGP_Info.RosterStack["BossEP"] = callback;	
+		else	
+			CEPGP_Info.RosterStack["RaidEP"] = callback;	
+		end	
+	else]]	
+		callback();	
+	--end	
+end
