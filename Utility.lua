@@ -1068,13 +1068,15 @@ function CEPGP_rosterUpdate(event)
 			CEPGP_guild_decay:Show();
 			CEPGP_guild_reset:Show();
 			CEPGP_raid_add_EP:Show();
+			CEPGP_raid_decay_GP:Show();
 			CEPGP_button_guild_restore:Show();
 			CEPGP_button_guild_import:Show();
 		else --[[ Hides context sensitive options if player cannot edit officer notes ]]--
 			CEPGP_guild_add_EP:Hide();
 			CEPGP_guild_decay:Hide();
 			CEPGP_guild_reset:Hide();
-			CEPGP_raid_add_EP:Hide();
+			CEPGP_raid_add_EP:Hide();	
+			CEPGP_raid_decay_GP:Hide();
 			CEPGP_button_guild_restore:Hide();
 			CEPGP_button_guild_import:Hide();
 		end
@@ -2822,7 +2824,7 @@ function CEPGP_getMain(name)
 	end
 end
 
---[[function CEPGP_syncAltStandings(main)
+function CEPGP_syncAltStandings(main)
 	if not main or not CEPGP.Alt.Links[main] then return; end
 	if not CEPGP_Info.Guild.Roster[main] then return; end
 	local mainIndex;
@@ -2907,4 +2909,4 @@ function CEPGP_addAltEPGP(EP, GP, alt, main)
 		CEPGP_print("Could not process changes to EPGP for " .. alt, true);
 		CEPGP_print(failMsg, true);
 	end
-end]]
+end

@@ -511,7 +511,7 @@ function CEPGP_ListButton_OnClick(obj, button)
 			end);
 			return;
 
-					elseif strfind(obj, "CEPGP_raid_decay_GP") then --Click the Decay Raid GP button in the Raid menu
+		elseif strfind(obj, "CEPGP_raid_decay_GP") then --Click the Decay Raid GP button in the Raid menu
 			CEPGP_decay_popup:Show();
 			CEPGP_decay_popup_reason:SetText("");
 			CEPGP_decay_popup_amount:SetText("0");
@@ -527,7 +527,7 @@ function CEPGP_ListButton_OnClick(obj, button)
 					amount ~= "0" then
 					PlaySound(799);
 					CEPGP_decay_popup:Hide();
-					CEPGP_DecayRaidGP(tonumber(amount), reason, EP, GP, fixed);
+					CEPGP_decayRaidGP(tonumber(amount), reason, EP, GP, fixed);
 				else
 					CEPGP_print("Enter a valid number", true);
 				end

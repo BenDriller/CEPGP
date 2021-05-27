@@ -1173,6 +1173,9 @@ function CEPGP_addEP(player, amount, msg)
 end
 
 function CEPGP_decay(amount, msg, decayEP, decayGP, fixed)
+end
+
+function CEPGP_decayRaidGP(amount, msg)
 	if amount == nil then
 		CEPGP_print("Please enter a valid number", 1);
 		return;
@@ -1182,7 +1185,7 @@ function CEPGP_decay(amount, msg, decayEP, decayGP, fixed)
 		
 		local temp = {};
 		
-		for k, _ in pairs(CEPGP_Info.Guild.Roster) do
+		for k, _ in pairs(CEPGP_Info.Raid.Roster) do
 			table.insert(temp, k);
 		end
 		
@@ -1193,23 +1196,23 @@ function CEPGP_decay(amount, msg, decayEP, decayGP, fixed)
 			if tonumber(amount) <= 0 then
 				amount = string.sub(amount, 2, string.len(amount));
 				if msg ~= "" and msg ~= nil then
-					str = "Guild " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " inflated by " .. amount .. (fixed and " " or "% ") .. "(" .. msg .. ")";
-					tLog = "Inflated " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " +" .. amount .. (fixed and "" or "%") .. "(" .. msg .. ")";
+					str = "Raid " .. (decayEP and "EP" or decayGP and "GP" or "GP") .. " inflated by " .. amount .. (fixed and " " or "% ") .. "(" .. msg .. ")";
+					tLog = "Inflated " .. (decayEP and "EP" or decayGP and "GP" or "GP") .. " +" .. amount .. (fixed and "" or "%") .. "(" .. msg .. ")";
 				else
-					str = "Guild " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " inflated by " .. amount .. (fixed and " " or "% ")
-					tLog = "Inflated " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " +" .. amount .. (fixed and "" or "%");
+					str = "Raid " .. (decayEP and "EP" or decayGP and "GP" or "GP") .. " inflated by " .. amount .. (fixed and " " or "% ")
+					tLog = "Inflated " .. (decayEP and "EP" or decayGP and "GP" or "GP") .. " +" .. amount .. (fixed and "" or "%");
 				end
 			else
 				if msg ~= "" and msg ~= nil then
-					str = "Guild " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " decayed by " .. amount .. (fixed and " " or "% ") .. "(" .. msg .. ")";
-					tLog = "Decayed " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " -" .. amount .. (fixed and "" or "%") .. "(" .. msg .. ")";
+					str = "Raid " .. (decayEP and "EP" or decayGP and "GP" or "GP") .. " decayed by " .. amount .. (fixed and " " or "% ") .. "(" .. msg .. ")";
+					tLog = "Decayed " .. (decayEP and "EP" or decayGP and "GP" or "GP") .. " -" .. amount .. (fixed and "" or "%") .. "(" .. msg .. ")";
 				else
-					str = "Guild " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " decayed by " .. amount .. (fixed and " " or "% ");
-					tLog = "Decayed " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " -" .. amount .. (fixed and "" or "%");
+					str = "Raid " .. (decayEP and "EP" or decayGP and "GP" or "EPGP") .. " decayed by " .. amount .. (fixed and " " or "% ");
+					tLog = "Decayed " .. (decayEP and "EP" or decayGP and "GP" or "GP") .. " -" .. amount .. (fixed and "" or "%");
 				end
 			end
 			CEPGP_sendChatMessage(str, CEPGP.Channel);
-			CEPGP_addTraffic("Guild", UnitName("player"), tLog);
+			CEPGP_addTraffic("Raid", UnitName("player"), tLog);
 			if _G["CEPGP_traffic"]:IsVisible() then
 				CEPGP_UpdateTrafficScrollBar();
 			end
@@ -1218,15 +1221,15 @@ function CEPGP_decay(amount, msg, decayEP, decayGP, fixed)
 		local roster = {};
 		
 		for name, data in pairs(CEPGP_Info.Guild.Roster) do
+
+		--	if CEPGP_Info.Raid.Roster[name] then
+		--	local name = GetRaidRosterInfo(i);
+		--	index = CEPGP_getIndex(name);
+
 			local EP, GP = CEPGP_getEPGP(name, index);
-			
-			if decayEP or (not decayEP and not decayGP) then
-				if fixed then
-					EP = math.max(math.floor(tonumber(EP)-amount), 0);	--	If the decay amount is a fixed number
-				else
-					EP = math.max(math.floor(tonumber(EP)*(1-(amount/100))), 0);	--	If it's a percentage
-				end
-			end
+
+			if(UnitInRaid(name)) then
+
 			if decayGP or (not decayEP and not decayGP) then
 				if CEPGP.GP.DecayFactor then
 					if fixed then
@@ -1248,6 +1251,7 @@ function CEPGP_decay(amount, msg, decayEP, decayGP, fixed)
 				[2] = EP,
 				[3] = GP
 			}
+		end
 		end
 		
 		for name, data in pairs(roster) do
@@ -1306,13 +1310,19 @@ function CEPGP_resetAll(msg)
 	
 end
 
-function CEPGP_DecayRaidGP(amount, msg)	
+function CEPGP_decayRaidGPwtf(amount, msg)	
+	
+
+
 	amount = math.floor(amount);	
 	local function callback()	
 		local success, failMsg = pcall(function()	
 			local total = GetNumGroupMembers();	
 			CEPGP_Info.IgnoreUpdates = true;	
 			CEPGP_SendAddonMsg("?IgnoreUpdates;true", "GUILD");	
+
+			CEPGP_print("Starting decay. Please wait...");
+
 				
 			local roster = {};	
 				
@@ -1324,19 +1334,19 @@ function CEPGP_DecayRaidGP(amount, msg)
 				if msg ~= "" and msg ~= nil then	
 					if tonumber(amount) <= 0 then	
 						CEPGP_addTraffic("Raid", UnitName("player"), "Increasing Raid GP -" .. amount .. " (" .. msg .. ")", "", "", "", "", "", time());	
-						CEPGP_sendChatMessage(amount .. "% GP increased (" .. msg .. ")", CEPGP.Channel);	
+						--CEPGP_sendChatMessage(amount .. "% GP increased (" .. msg .. ")", CEPGP.Channel);	
 					else	
 						CEPGP_addTraffic("Raid", UnitName("player"), "Decaying Raid GP +" .. amount .. " (" .. msg .. ")", "", "", "", "", "", time());	
-						CEPGP_sendChatMessage(amount .. "% GP decayed for all raid members (" .. msg .. ")", CEPGP.Channel);	
+						--CEPGP_sendChatMessage(amount .. "% GP decayed for all raid members (" .. msg .. ")", CEPGP.Channel);	
 					end	
 				else -- no message was written	
 					if tonumber(amount) <= 0 then	
 						amount = string.sub(amount, 2, string.len(amount));	
 						CEPGP_addTraffic("Raid", UnitName("player"), "Increasing Raid GP -" .. amount, "", "", "", "", "", time());	
-						CEPGP_sendChatMessage(amount .. "% GP increased for all raid members", CEPGP.Channel);	
+						--CEPGP_sendChatMessage(amount .. "% GP increased for all raid members", CEPGP.Channel);	
 					else	
 						CEPGP_addTraffic("Raid", UnitName("player"), "Add Raid EP +" .. amount, "", "", "", "", "", time());	
-						CEPGP_sendChatMessage(amount .. "% GP decayed for all raid members", CEPGP.Channel);	
+						--CEPGP_sendChatMessage(amount .. "% GP decayed for all raid members", CEPGP.Channel);	
 					end	
 				end	
 				if _G["CEPGP_traffic"]:IsVisible() then	
@@ -1394,8 +1404,10 @@ function CEPGP_DecayRaidGP(amount, msg)
 		end);	
 			
 		if not success then	
-			CEPGP_print("A problem was encountered while awarding EP to the raid", true);	
+			CEPGP_print("A problem was encountered while decaying raid GP", true);	
 			CEPGP_print(failMsg, true);	
+			CEPGP_print(CEPGP_Info.Raid.Roster);
+			CEPGP_print(CEPGP_Info.Raid.Roster[name]);
 		end	
 	end	
 		
